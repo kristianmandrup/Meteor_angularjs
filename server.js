@@ -38,7 +38,7 @@ var appConfig = {
   },
   
   getAngularTemplate: function() {
-    var templatePaths = angularApp.template.paths;
+    var templatePaths = angularApp.template.locations;
 
     // iterate all templatePaths and try each
     for (var templatePath in templatePaths) 
@@ -56,26 +56,35 @@ var appConfig = {
       return " ng-" + name + "='" + value + "' ";
     }
 
-    var angularApp = angularAppConfig;
-
-    if (fs.existsSync('angularAppConfig.json')) {
-      try {
-        angularApp = JSON.parse(this.readFile('angularAppConfig.json'));
-      } catch (e) {
-        console.log("Angularjs\n______\nCreate a file: 'angularAppConfig.json' to override the default settings"
-      }      
+    var loadAngularAppConfig = function() {
+      if (fs.existsSync('angularAppConfig.json')) {
+        try {
+          angularApp = JSON.parse(this.readFile('angularAppConfig.json'));
+        } catch (e) {
+          console.log("Angularjs\n______\nCreate a file: 'angularAppConfig.json' to override the default settings"
+            return null;
+        }      
+      }
     }
+
+    var angularApp = loadAngularAppConfig || angularAppConfig;
 
     angularApp.template.resolvedPaths = angularAppConfig.template.resolvedPaths;    
 
+    // 
     code = appConfig.getAppHtml();
+
+    // insert Angular template
     code = code.replace(angularApp.template.placeholderElement, appConfig.getAngularTemplate());
 
     var htmlElem = element('html');
     var htmlReplacement = htmlElem + ngAttr('app', angularApp.name);
 
+    // insert ng-app on html element
     code = code.replace(htmlElem, htmlReplacement);
 
+    // TODO: Allow insert on html element?
+    // insert ng-controller="AppCtrl" on angular placeholder element
     if (angularApp.appController) {
       var plh = element(angularApp.template.placeholderElement);
       var plhReplacement = plh + ngAttr('controller', angularApp.appController);
