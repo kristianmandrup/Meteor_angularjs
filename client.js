@@ -3,6 +3,10 @@ function() {
 	var self = this;
 	self.collections = {};
 	self.getCollection = function(name) {
+		if(name == 'users'){
+		    return Meteor.users;
+		}
+
 		if (self.collections[name]) {
 			return self.collections[name];
 		} else {
