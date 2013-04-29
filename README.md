@@ -6,19 +6,26 @@ The angular app generation can be configured in the server.js file via the 'angu
 
     var angularApp = {
         name: 'meteorapp',
-        withAppCtrl: true,
+        appController: 'AppCtrl',
         template: {
-            placeholderElement: "<body>",
+            placeholderElement: '<body>',
             name: 'angular.html',
-            defaultPath: 'bundle/static/' + this.name,
-            publicPath: 'public/' + this.name
-
-            paths: [this.defaultPath, this.publicPath]
-        }
+            locations: ['bundle/static/', 'public/'],    
     }     
 
+You can also configure using a config file 'angularAppConfig.json' with your overrides:
+
+    {
+        name: 'my-meteorapp',
+        appController: 'AppController',
+        template: {
+            placeholderElement: '<div ng-view>',
+            name: 'main-view.html',
+            locations: ['bundle/static/', 'public/'],    
+    }
+
 ##How to use it
-The angularjs app is by default called 'meteorapp'.
+The angularjs app is by default called 'meteorapp' (see Configuration above).
 
     angular.module('meteorapp', []).
         config(['$routeProvider', function($routeProvider) {
@@ -26,10 +33,6 @@ The angularjs app is by default called 'meteorapp'.
              when('/index', {templateUrl: 'partials/index.html',   controller: MeteorCtrl}).
              otherwise({redirectTo: '/'});
     }]);
-
-You can change this in server.js
-
-        angularApp.name = 'my-app';    
 
 
 ###Directory structure
@@ -40,12 +43,12 @@ Default structure:
          /partials
          angular.html(Main screen should contain body content)
 
-You can change angular template location in 'server.js', f.ex:
-
-    angularApp.template.name = "base.html";
-    angularApp.template.defaultPath = "public/angular/" + angular.template.name;
+Note: To change the defaults, see Configuration above
 
 ###Usage
+
+You can simply inject the $meteor module provided anywhere you want to use it, typically in your meteor-enabled controllers. Then execute the provided Meteor commands (see client.js)
+
     app.controller('MeteorCtrl', ['$scope','$meteor',function($scope,$meteor){
       $scope.todos = $meteor("todos").find({});
     	$meteor("todos").insert({
@@ -61,6 +64,8 @@ You can change angular template location in 'server.js', f.ex:
     </div>
 
 ### Current user
+In order to add Meteor current user functionality...
+
 See https://github.com/lvbreda/Meteor_angularjs/issues/18
 
 You can use something like:

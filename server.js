@@ -3,20 +3,26 @@ var fs = Npm.require("fs");
 var path = Npm.require("path");
 var Fiber = Npm.require("fibers");
 
-// TODO: These vars should be defined as Angular constants?
 
-var angularApp = {
+// default config
+var angularAppConfig = {
   name: 'meteorapp',
   appController: 'AppCtrl',
   template: {
     placeholderElement: "<body>",
     name: 'angular.html',
-    defaultPath: 'bundle/static/' + this.name,
-    publicPath: 'public/' + this.name
-
-    paths: [this.defaultPath, this.publicPath]
+    locations: ['bundle/static/', 'public/'],    
     notice: "This is used as your main page, this should contain the contents of the body.",
   }  
+}
+
+angularAppConfig.template.resolvedPaths = function() {
+  var self = this;
+  var resolved = [];
+  for (var path in this.paths) {
+    paths.push(path + self.name);
+  }
+  return resolved;
 }
 
 var appConfig = {
@@ -43,12 +49,38 @@ var appConfig = {
     console.log("Angularjs\n______\nCreate any of: " + templatePaths.join(', ') + "\n " + angularApp.template.notice);
   },
   replaceCode: function() {
+    var element = function(tag) {
+      return "<" + tag + " ";
+    }
+    var ngAttr = function(name, value) {
+      return " ng-" + name + "='" + value + "' ";
+    }
+
+    var angularApp = angularAppConfig;
+
+    if (fs.existsSync('angularAppConfig.json')) {
+      try {
+        angularApp = JSON.parse(this.readFile('angularAppConfig.json'));
+      } catch (e) {
+        console.log("Angularjs\n______\nCreate a file: 'angularAppConfig.json' to override the default settings"
+      }      
+    }
+
+    angularApp.template.resolvedPaths = angularAppConfig.template.resolvedPaths;    
+
     code = appConfig.getAppHtml();
     code = code.replace(angularApp.template.placeholderElement, appConfig.getAngularTemplate());
-    code = code.replace("<html ",'<html ng-app=' + angularApp.name + "' ");
+
+    var htmlElem = element('html');
+    var htmlReplacement = htmlElem + ngAttr('app', angularApp.name);
+
+    code = code.replace(htmlElem, htmlReplacement);
 
     if (angularApp.appController) {
-      code = code.replace("<body ", "<body ng-controller='" + angularApp.appController + "' ");
+      var plh = element(angularApp.template.placeholderElement);
+      var plhReplacement = plh + ngAttr('controller', angularApp.appController);
+
+      code = code.replace(plh, plhReplacement);
     }  
 
     if (typeof __meteor_runtime_config__ !== 'undefined') {
